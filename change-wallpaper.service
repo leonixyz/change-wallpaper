@@ -1,0 +1,10 @@
+[Unit]
+Description=Change wallpaper
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/change_wallpaper
+ExecStart=/usr/local/bin/change_wallpaper
+
+[Install]
+WantedBy=default.target

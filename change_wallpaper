@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+
+import datetime
+import os
+import random
+import re
+import shutil
+import requests
+import subprocess
+import sys
+
+
+PEXELS_API_TOKEN = os.environ.get("PEXELS_API_TOKEN")
+OUTPUT_FILE = "/tmp/wallpaper.jpg"
+
+
+def error(*args, **kwargs) -> None:
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def fetch(url, auth=None) -> dict:
+    headers = {"Authorization": auth} if auth else None
+    r = requests.get(url, headers=headers)
+    return r.json()
+
+
+def get_events() -> dict:
+    today = datetime.date.today()
+    day = today.day
+    month = today.month
+    url = f"https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/{month}/{day}"
+    response = fetch(url)
+    return response["selected"]
+
+
+def choose_random_element(elements) -> dict:
+    index = random.randint(0, len(elements) - 1)
+    return elements[index]
+
+
+def get_event_of_the_day() -> str:
+    events = get_events()
+    random_event = choose_random_element(events)
+    # return "A dispute between Sir John Forster and Sir John Carmichael led to a Scottish raid on Northumberland, England, in which 27 men were killed."
+    return random_event["text"]
+
+
+def get_image_url(query) -> str:
+    encoded_query = requests.utils.quote(query)
+    url = f"https://api.pexels.com/v1/search?orientation=landscape&query={encoded_query}"
+    response = fetch(url, auth=PEXELS_API_TOKEN)
+    images = response["photos"]
+    random_image = choose_random_element(images)
+    # return "https://images.pexels.com/photos/2463579/pexels-photo-2463579.jpeg"
+    return random_image["src"]["original"]
+
+
+def get_cropped_image(url, width, height):
+    return f"{url}?auto=compress&fit=crop&cs=tinysrgb&dpr=2&h={height}&w={width}"
+
+
+def xrandr() -> tuple[int, int]:
+    proc = subprocess.run(["xrandr", "--current"], capture_output=True)
+    stdout = proc.stdout.decode()
+    lines = stdout.split("\n")
+    current = lines[0]
+    match = re.search(r"current (\d+) x (\d+)", current)
+    width, height = match.group(1), match.group(2)
+    return int(width), int(height)
+
+
+def download_file(url, filename) -> None:
+    r = requests.get(url, stream=True)
+    with open(filename, "wb") as out_file:
+        shutil.copyfileobj(r.raw, out_file)
+
+
+def change_wallpaper() -> None:
+    subprocess.run(["/usr/bin/feh", "--bg-scale", "/tmp/wallpaper.jpg"])
+
+
+def main() -> None:
+    event = get_event_of_the_day()
+    image = get_image_url(event)
+    width, height = xrandr()
+    image = get_cropped_image(image, width, height)
+    download_file(image, OUTPUT_FILE)
+    change_wallpaper()
+
+
+if __name__ == "__main__":
+    if not PEXELS_API_TOKEN:
+        error(
+            "You need to set an environment variable with " \
+            "a valid API token for Pexels (pexels.com) " \
+            "under the name PEXELS_API_TOKEN."
+        )
+        exit(1)
+    main()

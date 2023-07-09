@@ -1,0 +1,11 @@
+[Unit]
+Description=Change wallpaper every 30 minutes
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnUnitActiveSec=1800
+Unit=change-wallpaper.service
+
+[Install]
+WantedBy=timers.target
