@@ -41,6 +41,7 @@ def choose_random_element(elements) -> dict:
 def get_event_of_the_day() -> str:
     events = get_events()
     random_event = choose_random_element(events)
+    print(f"{random_event['text']} ({random_event['pages'][0]['content_urls']['desktop']['page']})")
     # return "A dispute between Sir John Forster and Sir John Carmichael led to a Scottish raid on Northumberland, England, in which 27 men were killed."
     return random_event["text"]
 
@@ -51,6 +52,7 @@ def get_image_url(query) -> str:
     response = fetch(url, auth=PEXELS_API_TOKEN)
     images = response["photos"]
     random_image = choose_random_element(images)
+    print(f"{random_image['alt']} ({random_image['url']})")
     # return "https://images.pexels.com/photos/2463579/pexels-photo-2463579.jpeg"
     return random_image["src"]["original"]
 
@@ -80,6 +82,7 @@ def change_wallpaper() -> None:
 
 
 def main() -> None:
+    print(f"{datetime.datetime.now().isoformat()} - Changing the desktop wallpaper")
     event = get_event_of_the_day()
     image = get_image_url(event)
     width, height = xrandr()

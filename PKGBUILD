@@ -14,7 +14,7 @@ source=(
     "change-wallpaper.timer"
 )
 md5sums=(
-    "a6ab65d9db47dab5f23be22d1ca96240"
+    "aa0f694ce8878bf71af88f01b9dd20e6"
     "508e239b67bd7e1f99de442a8bc562c1"
     "784c65799fc0cbe2cae4244535d572f8"
 )
